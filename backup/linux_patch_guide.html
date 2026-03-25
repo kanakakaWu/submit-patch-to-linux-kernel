@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Linux Kernel Patch 指南</title>
+<style>
+    body { font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif; line-height: 1.6; max-width: 900px; margin: 0 auto; padding: 2rem; color: #24292e; background: #fff; }
+    h1, h2, h3 { border-bottom: 1px solid #eaecef; padding-bottom: .3em; }
+    pre { background-color: #f6f8fa; padding: 16px; border-radius: 6px; overflow: auto; }
+    code { font-family: SFMono-Regular,Consolas,"Liberation Mono",Menlo,monospace; background-color: rgba(27,31,35,.05); border-radius: 3px; padding: .2em .4em; font-size: 85%; }
+    pre code { background-color: transparent; padding: 0; font-size: 85%; }
+    table { border-collapse: collapse; width: 100%; margin-bottom: 1rem; }
+    table th, table td { border: 1px solid #dfe2e5; padding: 6px 13px; }
+    table tr:nth-child(2n) { background-color: #f6f8fa; }
+    blockquote { border-left: .25em solid #dfe2e5; color: #6a737d; padding: 0.5em 1em; margin: 1em 0; background-color: #f6f8fa; border-radius: 3px; }
+</style>
+</head>
+<body>
+<h1>Linux Kernel Patch 提交指南</h1>
+<blockquote>
+<p>參考來源：<a href="file:///d:/WorkFloder/Linux/upstream/Documentation/process/submitting-patches.rst"><code>Documentation/process/submitting-patches.rst</code></a></p>
+</blockquote>
+<hr />
+<h2>1. 取得最新原始碼</h2>
+<p>從主線倉庫 clone：</p>
+<pre><code class="language-bash">git clone git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git
+</code></pre>
+<blockquote>
+<p><strong>📝 NOTE:</strong>
+大多數子系統 maintainer 有自己的樹（tree），請優先針對該樹開發。查詢方式：<code>MAINTAINERS</code> 檔案中的 <strong>T:</strong> 欄位。</p>
+</blockquote>
+<h3>範例：以 DRM 子系統查詢開發樹</h3>
+<p><strong>步驟 1 — 搜尋 MAINTAINERS</strong></p>
+<p>假設你要修改 <code>drivers/gpu/drm/</code> 下的程式碼：</p>
+<pre><code class="language-bash"># 方法 A：直接搜尋關鍵字
+grep -n &quot;^DRM&quot; MAINTAINERS | head -20
+
+# 方法 B：讓工具自動找（推薦）
+scripts/get_maintainer.pl --scm your.patch
+</code></pre>
+<p><strong>步驟 2 — 閱讀 MAINTAINERS 區塊</strong></p>
+<p>在 <code>MAINTAINERS</code> 中找到對應區塊（以 DRM 主框架為例，實際位於 <code>MAINTAINERS.txt</code> 第 718 行附近）：</p>
+<pre><code>AGPGART DRIVER / DRM CORE
+M:  David Airlie &lt;airlied@redhat.com&gt;
+L:  dri-devel@lists.freedesktop.org
+S:  Maintained
+T:  git https://gitlab.freedesktop.org/drm/kernel.git    ← 主 DRM 樹
+F:  drivers/gpu/drm/
+</code></pre>
+<p>DRM misc 驅動（panel、tiny driver 等）則使用子樹：</p>
+<pre><code>DRM PANEL DRIVERS
+M:  Neil Armstrong &lt;neil.armstrong@linaro.org&gt;
+L:  dri-devel@lists.freedesktop.org
+S:  Maintained
+T:  git https://gitlab.freedesktop.org/drm/misc/kernel.git   ← misc 樹
+F:  drivers/gpu/drm/panel/
+</code></pre>
+<p>各欄位含義：</p>
+<table>
+<thead>
+<tr>
+<th>欄位</th>
+<th>說明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>M:</code></td>
+<td>Maintainer（主要聯絡人）</td>
+</tr>
+<tr>
+<td><code>L:</code></td>
+<td>郵件列表（送 patch 時需 CC）</td>
+</tr>
+<tr>
+<td><code>S:</code></td>
+<td>狀態（Maintained / Supported / Orphan…）</td>
+</tr>
+<tr>
+<td><code>T:</code></td>
+<td><strong>開發樹 git URL</strong>（針對此樹開發）</td>
+</tr>
+<tr>
+<td><code>F:</code></td>
+<td>負責的檔案/目錄</td>
+</tr>
+</tbody>
+</table>
+<p><strong>步驟 3 — Clone 並建立開發分支</strong></p>
+<pre><code class="language-bash"># 以 DRM misc 樹為例（panel / 小型驅動修改）
+git clone https://gitlab.freedesktop.org/drm/misc/kernel.git drm-misc
+cd drm-misc
+
+# 追蹤遠端 drm-misc-next 分支
+git checkout -t origin/drm-misc-next
+</code></pre>
+<p><strong>步驟 4 — 確認送件目標</strong></p>
+<pre><code class="language-bash"># 產生 patch 後確認收件人
+git format-patch -1
+scripts/get_maintainer.pl 0001-drm-panel-fix-foo.patch
+# 輸出範例：
+# Neil Armstrong &lt;neil.armstrong@linaro.org&gt; (maintainer)
+# dri-devel@lists.freedesktop.org (open list)
+</code></pre>
+<blockquote>
+<p><strong>💡 TIP:</strong>
+DRM 子系統有兩棵常用樹：<br />
+• <strong><code>drm/kernel.git</code></strong> → DRM 核心框架<br />
+• <strong><code>drm/misc/kernel.git</code></strong> → panel、bridge driver、tiny driver、misc 驅動<br />
+修改時需確認你的檔案對應哪棵樹的 <strong>F:</strong> 欄位。</p>
+</blockquote>
+<hr />
+<h2>2. 描述你的變更</h2>
+<p>良好的 commit 描述應包含：</p>
+<table>
+<thead>
+<tr>
+<th>要素</th>
+<th>說明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>問題說明</strong></td>
+<td>描述根本原因，說服 reviewer 這問題值得修復</td>
+</tr>
+<tr>
+<td><strong>使用者可見影響</strong></td>
+<td>crash、鎖死、效能下降、延遲等具體現象</td>
+</tr>
+<tr>
+<td><strong>量化數據</strong></td>
+<td>效能/記憶體改善需附數字佐證</td>
+</tr>
+<tr>
+<td><strong>技術細節</strong></td>
+<td>用英文說明你實際做了什麼</td>
+</tr>
+</tbody>
+</table>
+<p><strong>撰寫規則：</strong></p>
+<ul>
+<li>使用 <strong>祈使語氣</strong>：<code>"make xyzzy do frotz"</code>，而非 <code>"I changed xyzzy"</code></li>
+<li><strong>一個 patch 只解決一個問題</strong>；描述太長代表該拆分</li>
+<li>每次 resubmit 都要附上<strong>完整說明</strong>，不可只說「這是第 N 版」</li>
+<li>引用 commit 時，至少用 <strong>12 字元的 SHA-1</strong> 加上單行摘要：
+  <code>Commit e21d2170f366 ("video: remove unnecessary platform_set_drvdata()")</code></li>
+</ul>
+<p><strong>常用 Tag（放在描述結尾）：</strong></p>
+<pre><code>Link:   https://lore.kernel.org/&lt;message-id&gt;   # 相關討論
+Closes: https://example.com/issues/1234        # 關閉的 bug 報告
+Fixes:  54a4f0239f2e (&quot;KVM: MMU: make kvm_mmu_zap_page() return ...&quot;)
+</code></pre>
+<blockquote>
+<p><strong>💡 TIP:</strong>
+<pre><code class="language-ini">設定 git 以快速產生 Fixes: 標籤：
+[core]
+    abbrev = 12
+[pretty]
+    fixes = Fixes: %h (\"%s\")</code></pre>
+使用：<code>git log -1 --pretty=fixes &lt;commit-id&gt;</code></p>
+</blockquote>
+<hr />
+<h2>3. 拆分變更</h2>
+<ul>
+<li><strong>一個邏輯變更 = 一個 patch</strong></li>
+<li>Bug fix 與效能改善應分開送</li>
+<li>API 新增與使用該 API 的驅動程式應分開送</li>
+<li>確保每個 patch 套用後 kernel 仍可正常建置與執行（避免 <code>git bisect</code> 困境）</li>
+<li>單次投稿上限約 <strong>15 個 patch</strong>，等待 review 後再送下一批</li>
+</ul>
+<hr />
+<h2>4. 風格檢查</h2>
+<pre><code class="language-bash">scripts/checkpatch.pl &lt;your.patch&gt;
+</code></pre>
+<p>報告等級：</p>
+<table>
+<thead>
+<tr>
+<th>等級</th>
+<th>意義</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ERROR</code></td>
+<td>幾乎確定有問題</td>
+</tr>
+<tr>
+<td><code>WARNING</code></td>
+<td>需仔細審查</td>
+</tr>
+<tr>
+<td><code>CHECK</code></td>
+<td>需思考是否合適</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>❗ IMPORTANT:</strong>
+移動程式碼時，<strong>不要在同一個 patch 修改</strong>被移動的程式碼，這樣才能清楚區分「移動」與「修改」兩個動作。</p>
+</blockquote>
+<hr />
+<h2>5. 選擇收件人</h2>
+<pre><code class="language-bash">scripts/get_maintainer.pl &lt;your.patch&gt;
+</code></pre>
+<p><strong>收件原則：</strong></p>
+<table>
+<thead>
+<tr>
+<th>情境</th>
+<th>收件人</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>一般 patch</td>
+<td><code>linux-kernel@vger.kernel.org</code> + 子系統 maintainer</td>
+</tr>
+<tr>
+<td>安全漏洞</td>
+<td><code>security@kernel.org</code>（勿公開發送）</td>
+</tr>
+<tr>
+<td>stable 修復</td>
+<td>在 sign-off 區加 <code>Cc: stable@vger.kernel.org</code></td>
+</tr>
+<tr>
+<td>API 影響 userspace</td>
+<td><code>linux-api@vger.kernel.org</code> + MAN-PAGES maintainer</td>
+</tr>
+<tr>
+<td>找不到 maintainer</td>
+<td><code>akpm@linux-foundation.org</code>（最後手段）</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>6. 郵件格式：純文字、內嵌送出</h2>
+<blockquote>
+<p><strong>⚠️ WARNING:</strong>
+<strong>不要</strong> 用 MIME 附件、壓縮檔或連結方式送 patch。</p>
+</blockquote>
+<ul>
+<li>使用 <strong><code>git send-email</code></strong>（強烈建議）</li>
+<li>互動式教學：https://git-send-email.io</li>
+<li>Patch 必須以<strong>純文字內嵌</strong>方式傳送</li>
+<li>郵件主旨加上 <code>[PATCH]</code> 前綴（<code>git send-email</code> 自動處理）</li>
+</ul>
+<p>主旨格式：</p>
+<pre><code>Subject: [PATCH 001/123] subsystem: summary phrase
+Subject: [PATCH v2 01/27] x86: fix eflags tracking
+Subject: [PATCH Vx RESEND] sub/sys: Condensed patch summary   # 未修改重送
+</code></pre>
+<hr />
+<h2>7. 回應 Review</h2>
+<ul>
+<li><strong>一定要回覆</strong> reviewer 的意見，忽略 reviewer 等於被忽略</li>
+<li>對不導致程式碼變更的問題，也要回覆或更新 changelog</li>
+<li>感謝 reviewer 的時間</li>
+<li>使用<strong>交錯回覆（interleaved reply）</strong>，不要頂貼（top-posting）</li>
+<li>修改版本時在 cover letter 或個別 patch 加上 <strong>patch changelog</strong></li>
+<li>把 reviewer 加到新版本的 CC 清單</li>
+</ul>
+<p><strong>等待時間：</strong>
+- 一般等 <strong>2-3 週</strong>，忙碌期（merge window）更長
+- 最少等 <strong>一週</strong> 再 resend 或 ping</p>
+<hr />
+<h2>8. Patch 標準格式</h2>
+<h3>8.1 完整結構</h3>
+<pre><code>Subject: [PATCH N/M] subsystem: summary phrase (≤75 字元)
+
+From: Patch Author &lt;author@example.com&gt;    ← 僅在與寄件人不同時需要
+
+&lt;說明主體，75 欄換行，這部分會進入 git log&gt;
+
+Signed-off-by: Your Name &lt;your@email.com&gt;
+---
+&lt;版本變更說明，不進入 git log&gt;
+&lt;diffstat&gt;
+
+&lt;diff 內容&gt;
+</code></pre>
+<h3>8.2 Backtrace</h3>
+<p>在 commit message 中放 backtrace 時，應<strong>精簡</strong>只保留關鍵呼叫鏈：</p>
+<pre><code>unchecked MSR access error: WRMSR to 0xd51
+Call Trace:
+mba_wrmsr
+update_domains
+rdtgroup_mkdir
+</code></pre>
+<h3>8.3 版本資訊位置</h3>
+<p>版本 changelog 必須放在 <code>---</code> <strong>之後</strong>（不進入 git commit）：</p>
+<pre><code>Signed-off-by: Author &lt;author@mail&gt;
+---
+V2 -&gt; V3: Removed redundant helper function
+V1 -&gt; V2: Cleaned up coding style
+
+v2: https://lore.kernel.org/bar
+v1: https://lore.kernel.org/foo
+
+path/to/file | 5 +++--
+</code></pre>
+<hr />
+<h2>9. Sign-off 與各種 Tag</h2>
+<h3>Developer's Certificate of Origin（DCO）</h3>
+<p>加上 <code>Signed-off-by:</code> 即表示你認證此貢獻符合 DCO 1.1 規定：</p>
+<pre><code>Signed-off-by: Your Name &lt;your@email.com&gt;
+</code></pre>
+<p>用 <code>git commit -s</code> 或 <code>git revert -s</code> 自動附加。</p>
+<h3>Tag 一覽</h3>
+<table>
+<thead>
+<tr>
+<th>Tag</th>
+<th>說明</th>
+<th>需明確授權？</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Signed-off-by:</code></td>
+<td>參與開發或傳遞路徑</td>
+<td>✅ 是</td>
+</tr>
+<tr>
+<td><code>Acked-by:</code></td>
+<td>審閱並同意（可選加 <code># 備注</code>）</td>
+<td>✅ 是</td>
+</tr>
+<tr>
+<td><code>Reviewed-by:</code></td>
+<td>正式技術審查通過</td>
+<td>✅ 是</td>
+</tr>
+<tr>
+<td><code>Tested-by:</code></td>
+<td>測試環境驗證通過</td>
+<td>✅ 是</td>
+</tr>
+<tr>
+<td><code>Co-developed-by:</code></td>
+<td>共同作者（需緊跟 SoB）</td>
+<td>✅ 是</td>
+</tr>
+<tr>
+<td><code>Reported-by:</code></td>
+<td>回報 bug 的人</td>
+<td>❌ 可隱式授權</td>
+</tr>
+<tr>
+<td><code>Suggested-by:</code></td>
+<td>提出點子的人</td>
+<td>❌ 可隱式授權</td>
+</tr>
+<tr>
+<td><code>Cc:</code></td>
+<td>知情方（未留言）</td>
+<td>❌ 可隱式授權</td>
+</tr>
+<tr>
+<td><code>Fixes:</code></td>
+<td>指向被修復的 commit</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>Closes:</code></td>
+<td>關閉的 bug 連結</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>Link:</code></td>
+<td>相關討論連結</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>🛑 CAUTION:</strong>
+除 <code>Cc:</code>、<code>Reported-by:</code>、<code>Suggested-by:</code> 外，其他 tag 都需要<strong>當事人明確同意</strong>才能添加。</p>
+</blockquote>
+<h3>Co-developed-by 範例</h3>
+<pre><code>Co-developed-by: First Co-Author &lt;first@coauthor.example.org&gt;
+Signed-off-by: First Co-Author &lt;first@coauthor.example.org&gt;
+Co-developed-by: Second Co-Author &lt;second@coauthor.example.org&gt;
+Signed-off-by: Second Co-Author &lt;second@coauthor.example.org&gt;
+Signed-off-by: From Author &lt;from@author.example.org&gt;
+</code></pre>
+<hr />
+<h2>10. Base Tree 資訊</h2>
+<p>讓 reviewer 與 CI 知道你的 patch 基於哪個 commit：</p>
+<pre><code class="language-bash">git checkout -t -b my-topical-branch master
+# ... 進行修改 ...
+git format-patch --base=auto --cover-letter -o outgoing/ master
+</code></pre>
+<p>產生的 patch 會自動在結尾附上：</p>
+<pre><code>base-commit: &lt;commit-hash&gt;
+</code></pre>
+<hr />
+<h2>11. In-Reply-To</h2>
+<ul>
+<li>可用 <code>In-Reply-To:</code> 將 patch 與 bug 報告郵件關聯</li>
+<li><strong>多 patch series 不建議</strong>用 In-Reply-To 指向舊版本（避免郵件樹混亂）</li>
+<li>改用 cover letter 中放 lore.kernel.org 連結</li>
+</ul>
+<hr />
+<h2>12. 工具</h2>
+<table>
+<thead>
+<tr>
+<th>工具</th>
+<th>用途</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>git send-email</code></td>
+<td>傳送 patch 郵件</td>
+</tr>
+<tr>
+<td><code>git format-patch</code></td>
+<td>產生標準格式 patch 檔</td>
+</tr>
+<tr>
+<td><code>scripts/checkpatch.pl</code></td>
+<td>風格與錯誤檢查</td>
+</tr>
+<tr>
+<td><code>scripts/get_maintainer.pl</code></td>
+<td>找出 patch 的正確收件人</td>
+</tr>
+<tr>
+<td><code>b4</code></td>
+<td>自動化流程（追蹤依賴、checkpatch、格式化、送信） → https://b4.docs.kernel.org</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>13. b4 工具使用指南</h2>
+<p><code>b4</code> 是 Linux kernel 社群維護的自動化工具，可簡化 patch 的準備、寄送與 trailer 回收流程。官方文件：<a href="https://b4.docs.kernel.org">https://b4.docs.kernel.org</a></p>
+<h3>13.1 安裝</h3>
+<pre><code class="language-bash"># 推薦使用 pipx（獨立隔離環境）
+pipx install b4
+
+# 或透過套件管理器
+dnf install b4      # Fedora/RHEL
+apt install b4      # Debian/Ubuntu
+</code></pre>
+<hr />
+<h3>13.2 開發者工作流程（b4 prep → send → trailers）</h3>
+<pre><code>b4 prep -n &lt;name&gt;        建立 topical branch
+  ↓ 撰寫 commits
+b4 prep --edit-cover     編輯 cover letter
+b4 prep --auto-to-cc     自動收集收件人
+b4 send -o /tmp/preview  預覽（不實際送出）
+b4 send                  實際送出
+  ↓ 等待 review
+b4 trailers -u           回收 Reviewed-by / Acked-by
+  ↓ git rebase -i 修改
+b4 send                  送出下一版（自動遞增版號）
+</code></pre>
+<hr />
+<h3>13.3 b4 prep — 準備 patch series</h3>
+<h4>建立新的 topical branch</h4>
+<pre><code class="language-bash"># 從目前 HEAD 建立（自動建立 b4/&lt;name&gt; 分支並切換過去）
+b4 prep -n fix-drm-panel-init
+
+# 指定 fork point（建議從 tag 或已知 commit 分叉）
+b4 prep -n fix-drm-panel-init -f drm-misc-next
+</code></pre>
+<blockquote>
+<p><strong>📝 NOTE:</strong>
+<code>&lt;name&gt;</code> 會成為 change-id 的一部分，請取有意義的名稱，勿使用 <code>foo</code>、<code>test</code>。
+（註解：建立新分支時會出現一個新的 commit，主要記錄 b4 歷程，無程式碼變更）</p>
+</blockquote>
+<h4>合入變更</h4>
+<p>準備好分支後，可透過 <code>git cherry-pick &lt;commit&gt;</code> 或 <code>git rebase -i</code> 將你的修改放入此分支中。</p>
+<blockquote>
+<p><strong>⚠️ WARNING:</strong>
+`cover letter`（也就是記錄 b4 track 歷程的那個 commit）<strong>必須</strong>保持在這個 patch series 的第一個 commit（也就是最底層的 commit），不可將其往後移。</p>
+</blockquote>
+<h4>編輯 cover letter</h4>
+<pre><code class="language-bash">b4 prep --edit-cover      # 以 $EDITOR 開啟，存檔後自動更新
+</code></pre>
+<p>Cover letter 的第一行（Subject）會成為整個 series 的主旨；其餘說明寄送時放在
+cover email 的 body，不會進入個別 commit。</p>
+<blockquote>
+<p><strong>📝 NOTE:</strong>
+當 PATCH 只有一個時，不需要 cover letter，<code>b4 send</code> 送信時也不會發送 cover letter 作為 [PATCH 0/1]。</p>
+</blockquote>
+<h4>收集收件人</h4>
+<pre><code class="language-bash">b4 prep --auto-to-cc      # 自動查詢 MAINTAINERS，填入 To/Cc
+</code></pre>
+<p>產生後請人工檢視並移除不相關的地址。</p>
+<h4>其他常用選項</h4>
+<pre><code class="language-bash">b4 prep --check           # 執行 checkpatch 等 pre-flight 檢查
+b4 prep --cleanup         # 刪除已合入/過期的 prep 分支
+</code></pre>
+<hr />
+<h3>13.4 b4 send — 送出 patch</h3>
+<h4>設定寄件方式</h4>
+<p><strong>方式 A：使用 SMTP（<code>.git/config</code> 或 <code>~/.gitconfig</code>）</strong></p>
+<pre><code class="language-ini">[sendemail]
+    smtpServer     = smtp.example.org
+    smtpServerPort = 465
+    smtpEncryption = ssl
+    smtpUser       = alice@example.org
+    smtpPass       = &lt;password&gt;
+</code></pre>
+<p><strong>方式 B：使用 kernel.org Web 端點（適合未設定 SMTP 者）</strong></p>
+<p>對於 kernel.org 託管的專案，可使用官方提供的 Web 端點寄信：</p>
+<ol>
+<li>
+<p><strong>產生 ed25519 金鑰（若已有設定 <code>user.signingKey</code> 的 PGP 金鑰則可跳過）</strong>：
+<pre><code class="language-bash">bash patatt genkey</code></pre>
+   執行後將產生新金鑰，並在終端機輸出類似以下的設定提示:
+   <pre><code class="language-ini">
+   [patatt]
+       signingkey = ed25519:20220915
+       selector = 20220915</code></pre>
+   請複製終端機上顯示的 <code>[patatt]</code> 區塊，並將其加入到你的全域 <code>~/.gitconfig</code> 或專案底下的 <code>.git/config</code> 中。</p>
+</li>
+<li>
+<p><strong>設定 Web 端點 URL</strong>（在 <code>~/.gitconfig</code> 或 <code>.git/config</code>）：
+   <code>ini
+   [b4]
+       send-endpoint-web = https://lkml.kernel.org/_b4_submit</code></p>
+</li>
+<li>
+<p><strong>申請授權驗證</strong>：
+   <code>bash
+   b4 send --web-auth-new</code>
+   <em>這將產生一封包含驗證碼信件，發送到你的 <code>user.email</code>。</em></p>
+</li>
+<li>
+<p><strong>完成驗證</strong>：
+   收取該郵件，執行郵件中提供的驗證指令：
+   <code>bash
+   b4 send --web-auth-verify &lt;challenge-string&gt;</code>
+授權完成後，後續即可直接使用 <code>b4 send</code> 寄出 patch，無須透過自己的 SMTP 伺服器。</p>
+</li>
+</ol>
+<h4>送出流程</h4>
+<pre><code class="language-bash"># 1. 預覽：輸出到目錄，不實際送信
+b4 send -o /tmp/preview-patches
+
+# 2. 寄一份給自己確認格式
+b4 send --reflect
+
+# 3. 正式送出
+b4 send
+</code></pre>
+<p>送出後 b4 會自動：
+- 將 changelog 追加到 cover letter
+- 版號遞增（<code>v1</code> → <code>v2</code>）
+- 在 lore.kernel.org 留下記錄</p>
+<h4>重送（RESEND）</h4>
+<pre><code class="language-bash">b4 send --resend          # 未修改內容，重送同版本
+</code></pre>
+<hr />
+<h3>13.5 b4 trailers — 回收 Review 標籤</h3>
+<p>Reviewer 在郵件中回覆 <code>Reviewed-by:</code> / <code>Acked-by:</code> 後，用此指令自動抓回並
+附加到對應的 commit：</p>
+<pre><code class="language-bash">b4 trailers -u            # 從 lore 抓取最新 trailers 並套用
+</code></pre>
+<ul>
+<li>比對依據：commit 的 <strong>patch-id</strong> 或 <strong>標題</strong> 相符即可自動配對</li>
+<li>套用後若需調整，用 <code>git rebase -i</code> → <code>reword</code> 手動編輯</li>
+</ul>
+<hr />
+<h3>13.6 完整範例（DRM panel 修復）</h3>
+<pre><code class="language-bash"># 1. 取得 DRM misc 開發樹
+git clone https://gitlab.freedesktop.org/drm/misc/kernel.git drm-misc
+cd drm-misc
+git checkout -t origin/drm-misc-next
+
+# 2. 建立 topical branch
+b4 prep -n fix-drm-panel-foo -f drm-misc-next
+
+# 3. 進行修改並 commit
+vim drivers/gpu/drm/panel/panel-foo.c
+git add -p
+git commit -s       # -s 自動加 Signed-off-by
+
+# 4. 編輯 cover letter
+b4 prep --edit-cover
+
+# 5. 收集收件人 &amp; 預檢
+b4 prep --auto-to-cc
+b4 prep --check
+
+# 6. 預覽後送出
+b4 send -o /tmp/out   # 先看輸出
+b4 send               # 確認無誤後正式送出
+
+# --- 等待 review，收到 Reviewed-by 回覆後 ---
+
+# 7. 回收 trailers
+b4 trailers -u
+
+# 8. 若需修改，rebase 後送下一版（版號自動遞增）
+git rebase -i drm-misc-next
+b4 send
+
+# 9. 合入後清理
+b4 prep --cleanup
+</code></pre>
+<hr />
+<h2>參考資料</h2>
+<ul>
+<li><a href="https://www.ozlabs.org/~akpm/stuff/tpp.txt">The perfect patch – Andrew Morton</a></li>
+<li><a href="https://web.archive.org/web/20180829112450/http://linux.yyz.us/patch-format.html">Linux kernel patch submission format – Jeff Garzik</a></li>
+<li><a href="http://halobates.de/on-submitting-patches.pdf">On submitting kernel patches – Andi Kleen</a></li>
+<li><code>Documentation/process/coding-style.rst</code></li>
+<li><code>Documentation/process/email-clients.rst</code></li>
+<li><code>Documentation/process/stable-kernel-rules.rst</code></li>
+<li><code>Documentation/process/security-bugs.rst</code></li>
+</ul>
+</body>
+</html>
