@@ -156,12 +156,13 @@ Fixes:  54a4f0239f2e (&quot;KVM: MMU: make kvm_mmu_zap_page() return ...&quot;)
 </code></pre>
 <blockquote>
 <p><strong>💡 TIP:</strong>
-設定 git 以快速產生 <code>Fixes:</code> 標籤：
-<code>[core]
+設定 git 以快速產生 <code>Fixes:</code> 標籤：</p>
+<pre><code>[core]
     abbrev = 12
 [pretty]
-    fixes = Fixes: %h (\"%s\")</code>
-使用：<code>git log -1 --pretty=fixes &lt;commit-id&gt;</code></p>
+    fixes = Fixes: %h ("%s")
+</code></pre>
+<p>使用：<code>git log -1 --pretty=fixes &lt;commit-id&gt;</code></p>
 </blockquote>
 <hr />
 <h2>3. 拆分變更</h2>

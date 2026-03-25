@@ -126,12 +126,12 @@ Fixes:  54a4f0239f2e ("KVM: MMU: make kvm_mmu_zap_page() return ...")
 
 > [!TIP]
 > 設定 git 以快速產生 `Fixes:` 標籤：
-> ```
-> [core]
->     abbrev = 12
-> [pretty]
->     fixes = Fixes: %h (\"%s\")
-> ```
+>
+>     [core]
+>         abbrev = 12
+>     [pretty]
+>         fixes = Fixes: %h ("%s")
+>
 > 使用：`git log -1 --pretty=fixes <commit-id>`
 
 ---
