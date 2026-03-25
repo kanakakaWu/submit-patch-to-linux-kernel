@@ -382,6 +382,7 @@ b4 prep -n <name>        建立 topical branch
   ↓ 撰寫 commits
 b4 prep --edit-cover     編輯 cover letter
 b4 prep --auto-to-cc     自動收集收件人
+b4 prep --check          執行 pre-flight 檢查
 b4 send -o /tmp/preview  預覽（不實際送出）
 b4 send                  實際送出
   ↓ 等待 review
@@ -469,35 +470,34 @@ b4 prep --cleanup         # 刪除已合入/過期的 prep 分支
 
 對於 kernel.org 託管的專案，可使用官方提供的 Web 端點寄信：
 
-1. **產生 ed25519 金鑰（若已有設定 `user.signingKey` 的 PGP 金鑰則可跳過）**：
-   ```bash
-   patatt genkey
-   ```
-   執行後將產生新金鑰，並在終端機輸出類似以下的設定提示：
-   ```
-   [patatt]
-       signingkey = ed25519:20220915
-       selector = 20220915
-   ```
-   請複製終端機上顯示的 `[patatt]` 區塊，並將其加入到你的全域 `~/.gitconfig` 或專案底下的 `.git/config` 中。
+1.  **產生 ed25519 金鑰（若已有設定 `user.signingKey` 的 PGP 金鑰則可跳過）**：
 
-2. **設定 Web 端點 URL**（在 `~/.gitconfig` 或 `.git/config`）：
-   ```
-   [b4]
-       send-endpoint-web = https://lkml.kernel.org/_b4_submit
-   ```
+        patatt genkey
 
-3. **申請授權驗證**：
-   ```bash
-   b4 send --web-auth-new
-   ```
-   *這將產生一封包含驗證碼信件，發送到你的 `user.email`。*
+    執行後將產生新金鑰，並在終端機輸出類似以下的設定提示：
 
-4. **完成驗證**：
-   收取該郵件，執行郵件中提供的驗證指令：
-   ```bash
-   b4 send --web-auth-verify <challenge-string>
-   ```
+        [patatt]
+            signingkey = ed25519:20220915
+            selector = 20220915
+
+    請複製終端機上顯示的 `[patatt]` 區塊，並將其加入到你的全域 `~/.gitconfig` 或專案底下的 `.git/config` 中。
+
+2.  **設定 Web 端點 URL**（在 `~/.gitconfig` 或 `.git/config`）：
+
+        [b4]
+            send-endpoint-web = https://lkml.kernel.org/_b4_submit
+
+3.  **申請授權驗證**：
+
+        b4 send --web-auth-new
+
+    *這將產生一封包含驗證碼信件，發送到你的 `user.email`。*
+
+4.  **完成驗證**：
+
+    收取該郵件，執行郵件中提供的驗證指令：
+
+        b4 send --web-auth-verify <challenge-string>
 授權完成後，後續即可直接使用 `b4 send` 寄出 patch，無須透過自己的 SMTP 伺服器。
 
 #### 送出流程
