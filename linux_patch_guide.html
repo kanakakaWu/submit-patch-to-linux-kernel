@@ -565,11 +565,12 @@ b4 prep --cleanup         # 刪除已合入/過期的 prep 分支
 </li>
 </ol>
 <h4>送出流程</h4>
-<pre><code class="language-bash"># 1. 預覽：輸出到目錄，不實際送信
+<pre><code class="language-bash"># 1. 輸出到目錄，不實際送信（預覽內容）
 b4 send -o /tmp/preview-patches
 
-# 2. 寄一份給自己確認格式
-b4 send --reflect
+# 2. 寄給自己確認格式（推薦）
+b4 send --reflect                 # 寄給自己 (author email)
+b4 send --preview-to &lt;email&gt;      # 寄給指定的測試信箱
 
 # 3. 正式送出
 b4 send
@@ -614,8 +615,10 @@ b4 prep --auto-to-cc
 b4 prep --check
 
 # 6. 預覽後送出
-b4 send -o /tmp/out   # 先看輸出
-b4 send               # 確認無誤後正式送出
+b4 send -o /tmp/out       # 先看輸出檔
+b4 send --reflect         # 寄給自己測試
+# b4 send --preview-to &lt;email&gt;
+b4 send                   # 確認無誤後正式送出
 
 # --- 等待 review，收到 Reviewed-by 回覆後 ---
 
