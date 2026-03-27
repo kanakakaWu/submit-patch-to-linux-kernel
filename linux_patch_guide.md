@@ -586,6 +586,40 @@ b4 prep --cleanup
 
 ---
 
+---
+
+## 附錄 A: Devicetree (DT) Binding Patch 提交規範
+
+針對修改 `Documentation/devicetree/bindings/` 或 `include/dt-bindings/` 的 patch，需遵守以下額外守則：
+
+### A.1 獨立 Patch 與主旨
+- **分離 Patch**：Binding 的修改必須與驅動程式實作分開成獨立的 patch。
+- **主旨前綴**：
+  - 預設格式：`dt-bindings: <子目錄>: <描述>`
+  - 部分子系統（如 ASoC, media, SPI 等）：`<子目錄>: dt-bindings: <描述>`
+- **精簡主旨**：避免在主旨中使用 "Documentation" 或 "YAML"，因為這是隱含的。
+  - *範例*：`dt-bindings: iio: adc: Add ROHM BD79100G`
+
+### A.2 格式與驗證
+- **YAML 格式**：現代 DT binding 必須使用 Devicetree schema (YAML) 格式。
+- **驗證指令**：送出前必須通過以下檢查：
+  ```bash
+  make dt_binding_check
+  ```
+- **授權**：Binding 檔案偏好使用雙重授權：`(GPL-2.0-only OR BSD-2-Clause)`。
+
+### A.3 送件對象與順序
+- **收件人**：必須寄至 `devicetree@vger.kernel.org` 並 CC DT maintainers（利用 `get_maintainer.pl` 查詢）。
+- **Patch 順序**：
+  1. Binding 定義 patch（必須在程式碼之前）。
+  2. 驅動程式實作 patch。
+  3. DTS 修改 patch（通常放在最後，且常經由 SoC tree 進行合併）。
+
+### A.4 相容性 (Compatible Strings)
+- **先定義後使用**：在 DTS 中使用的任何 `compatible` 字串，必須先在對應的 binding 定義文件中說明。即使驅動程式暫時還沒用到，文件也必須先行。
+
+---
+
 ## 參考資料
 
 - [`Documentation/process/submitting-patches.rst`](https://www.kernel.org/doc/html/latest/process/submitting-patches.html)
