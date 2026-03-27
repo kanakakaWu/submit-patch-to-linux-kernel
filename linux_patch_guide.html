@@ -30,7 +30,7 @@
 </code></pre>
 <blockquote>
 <p><strong>📝 NOTE:</strong>
-大多數子系統 maintainer 有自己的樹（tree），請優先針對該樹開發。查詢方式：<code>MAINTAINERS</code> 檔案中的 <strong>T:</strong> 欄位。</p>
+大多數子系統 maintainer 有自己的樹（tree），請優先針對該樹開發。查詢方式：<code>MAINTAINERS</code>（或 <code>MAINTAINERS.txt</code>）檔案中的 <strong>T:</strong> 欄位。</p>
 </blockquote>
 <h3>範例：以 DRM 子系統查詢開發樹</h3>
 <p><strong>步驟 1 — 搜尋 MAINTAINERS</strong></p>
@@ -42,9 +42,10 @@ grep -n &quot;^DRM&quot; MAINTAINERS | head -20
 scripts/get_maintainer.pl --scm your.patch
 </code></pre>
 <p><strong>步驟 2 — 閱讀 MAINTAINERS 區塊</strong></p>
-<p>在 <code>MAINTAINERS</code> 中找到對應區塊（以 DRM 主框架為例，實際位於 <code>MAINTAINERS.txt</code> 第 718 行附近）：</p>
-<pre><code>AGPGART DRIVER / DRM CORE
-M:  David Airlie &lt;airlied@redhat.com&gt;
+<p>在 <code>MAINTAINERS</code> 中找到對應區塊（以 DRM 主框架為例，實際位於 <code>MAINTAINERS.txt</code> 第 8449 行附近）：</p>
+<pre><code>DRM DRIVERS
+M:  David Airlie &lt;airlied@gmail.com&gt;
+M:  Simona Vetter &lt;simona@ffwll.ch&gt;
 L:  dri-devel@lists.freedesktop.org
 S:  Maintained
 T:  git https://gitlab.freedesktop.org/drm/kernel.git    ← 主 DRM 樹
@@ -631,14 +632,14 @@ b4 prep --cleanup
 <hr />
 <h2>參考資料</h2>
 <ul>
-<li><a href="file:///d:/WorkFloder/Linux/upstream/Documentation/process/submitting-patches.rst"><code>Documentation/process/submitting-patches.rst</code></a></li>
+<li><a href="https://www.kernel.org/doc/html/latest/process/submitting-patches.html"><code>Documentation/process/submitting-patches.rst</code></a></li>
 <li><a href="https://www.ozlabs.org/~akpm/stuff/tpp.txt">The perfect patch – Andrew Morton</a></li>
 <li><a href="https://web.archive.org/web/20180829112450/http://linux.yyz.us/patch-format.html">Linux kernel patch submission format – Jeff Garzik</a></li>
 <li><a href="http://halobates.de/on-submitting-patches.pdf">On submitting kernel patches – Andi Kleen</a></li>
-<li><code>Documentation/process/coding-style.rst</code></li>
-<li><code>Documentation/process/email-clients.rst</code></li>
-<li><code>Documentation/process/stable-kernel-rules.rst</code></li>
-<li><code>Documentation/process/security-bugs.rst</code></li>
+<li><a href="https://www.kernel.org/doc/html/latest/process/coding-style.html"><code>Documentation/process/coding-style.rst</code></a></li>
+<li><a href="https://www.kernel.org/doc/html/latest/process/email-clients.html"><code>Documentation/process/email-clients.rst</code></a></li>
+<li><a href="https://www.kernel.org/doc/html/latest/process/stable-kernel-rules.html"><code>Documentation/process/stable-kernel-rules.rst</code></a></li>
+<li><a href="https://www.kernel.org/doc/html/latest/process/security-bugs.html"><code>Documentation/process/security-bugs.rst</code></a></li>
 </ul>
 </body>
 </html>

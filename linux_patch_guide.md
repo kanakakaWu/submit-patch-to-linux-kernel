@@ -15,7 +15,7 @@ git clone git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git
 ```
 
 > [!NOTE]
-> 大多數子系統 maintainer 有自己的樹（tree），請優先針對該樹開發。查詢方式：`MAINTAINERS` 檔案中的 **T:** 欄位。
+> 大多數子系統 maintainer 有自己的樹（tree），請優先針對該樹開發。查詢方式：`MAINTAINERS`（或 `MAINTAINERS.txt`）檔案中的 **T:** 欄位。
 
 ### 範例：以 DRM 子系統查詢開發樹
 
@@ -33,11 +33,12 @@ scripts/get_maintainer.pl --scm your.patch
 
 **步驟 2 — 閱讀 MAINTAINERS 區塊**
 
-在 `MAINTAINERS` 中找到對應區塊（以 DRM 主框架為例，實際位於 `MAINTAINERS.txt` 第 718 行附近）：
+在 `MAINTAINERS` 中找到對應區塊（以 DRM 主框架為例，實際位於 `MAINTAINERS.txt` 第 8449 行附近）：
 
 ```
-AGPGART DRIVER / DRM CORE
-M:	David Airlie <airlied@redhat.com>
+DRM DRIVERS
+M:	David Airlie <airlied@gmail.com>
+M:	Simona Vetter <simona@ffwll.ch>
 L:	dri-devel@lists.freedesktop.org
 S:	Maintained
 T:	git https://gitlab.freedesktop.org/drm/kernel.git    ← 主 DRM 樹
@@ -584,11 +585,11 @@ b4 prep --cleanup
 
 ## 參考資料
 
-- [`Documentation/process/submitting-patches.rst`](file:///d:/WorkFloder/Linux/upstream/Documentation/process/submitting-patches.rst)
+- [`Documentation/process/submitting-patches.rst`](https://www.kernel.org/doc/html/latest/process/submitting-patches.html)
 - [The perfect patch – Andrew Morton](https://www.ozlabs.org/~akpm/stuff/tpp.txt)
 - [Linux kernel patch submission format – Jeff Garzik](https://web.archive.org/web/20180829112450/http://linux.yyz.us/patch-format.html)
 - [On submitting kernel patches – Andi Kleen](http://halobates.de/on-submitting-patches.pdf)
-- `Documentation/process/coding-style.rst`
-- `Documentation/process/email-clients.rst`
-- `Documentation/process/stable-kernel-rules.rst`
-- `Documentation/process/security-bugs.rst`
+- [`Documentation/process/coding-style.rst`](https://www.kernel.org/doc/html/latest/process/coding-style.html)
+- [`Documentation/process/email-clients.rst`](https://www.kernel.org/doc/html/latest/process/email-clients.html)
+- [`Documentation/process/stable-kernel-rules.rst`](https://www.kernel.org/doc/html/latest/process/stable-kernel-rules.html)
+- [`Documentation/process/security-bugs.rst`](https://www.kernel.org/doc/html/latest/process/security-bugs.html)
