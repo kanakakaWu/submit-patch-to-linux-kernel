@@ -623,6 +623,7 @@ b4 prep --cleanup
 ## 參考資料
 
 - [`Documentation/process/submitting-patches.rst`](https://www.kernel.org/doc/html/latest/process/submitting-patches.html)
+- [`Documentation/devicetree/bindings/submitting-patches.rst`](https://www.kernel.org/doc/html/latest/devicetree/bindings/submitting-patches.html)
 - [The perfect patch – Andrew Morton](https://www.ozlabs.org/~akpm/stuff/tpp.txt)
 - [Linux kernel patch submission format – Jeff Garzik](https://web.archive.org/web/20180829112450/http://linux.yyz.us/patch-format.html)
 - [On submitting kernel patches – Andi Kleen](http://halobates.de/on-submitting-patches.pdf)
